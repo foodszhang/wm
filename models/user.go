@@ -17,6 +17,7 @@ type Profile struct {
 	Age     int
 	Email   string
 	Summary string
+	Avatar  string
 	User    *User `orm:"reverse(one)"`
 }
 
