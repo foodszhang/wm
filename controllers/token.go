@@ -29,17 +29,14 @@ func (self *Token) make_token(salt string) string {
 func (self *Token) Create(data interface{}, expires int) string {
 	result, _ := json.Marshal(data)
 	str := string(result)
-	fmt.Printf("@@@@@%s\n", str)
 	var token string
+	var origin string
 	for {
-		origin := self.make_token(str)
-		origin = self.TokenPrefix + origin
+		origin = self.make_token(str)
 
 		//set key value ex time nx
 		token = fmt.Sprintf("%x", sha1.Sum([]byte(origin)))
-		fmt.Println(token)
-		reply, err := redis_conn.Do("SET", token, str, "ex", expires, "nx")
-		fmt.Println(reply, "hahaha", err)
+		reply, _ := redis_conn.Do("SET", self.RedisPrefix+token, str, "ex", expires, "nx")
 		if reply == "OK" {
 			break
 		} else {
@@ -54,17 +51,12 @@ func (self *Token) Delete(token string) {
 	redis_conn.Do("DEL", token)
 }
 
-func (self *Token) Retrieve(token string) interface{} {
-	result, _ := redis_conn.Do("GET", token)
-
+// 出去之后再进行类型转化
+func (self *Token) Retrieve(token string) []byte {
+	result, _ := redis_conn.Do("GET", self.RedisPrefix+token)
 	data_bytes, b := result.([]byte)
-	if b {
-		fmt.Printf("!!!!%s\n", data_bytes)
-	} else {
+	if !b {
 		fmt.Println("转化失败")
 	}
-	var data interface{}
-	json.Unmarshal(data_bytes, &data)
-	fmt.Printf("!%s\n", data)
-	return data
+	return data_bytes
 }
