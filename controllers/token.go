@@ -60,3 +60,5 @@ func (self *Token) Retrieve(token string) []byte {
 	}
 	return data_bytes
 }
+
+var AuthToken = Token{"auth", "wm", 60 * 60 * 24 * 30}

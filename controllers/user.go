@@ -1,11 +1,17 @@
 package controllers
 
-//import (
-//	"encoding/json"
-//	"wm/models"
-//
-//	"github.com/astaxie/beego"
-//)
+import (
+	"encoding/json"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/orm"
+	"github.com/astaxie/beego/validation"
+	"log"
+	"wm/models"
+)
+
+type UserController struct {
+	beego.Controller
+}
 
 // Operations about Users
 
@@ -15,14 +21,44 @@ package controllers
 // @Success 200 {int} models.User.Id
 // @Failure 403 body is empty
 // @router / [post]
-//func (u *UserController) Post() {
-////	var user models.User
-////	json.Unmarshal(u.Ctx.Input.RequestBody, &user)
-////	uid := models.AddUser(user)
-////	u.Data["json"] = map[string]string{"uid": uid}
-////	u.ServeJSON()
-//}
-//
+func (u *UserController) Post() {
+	o := orm.NewOrm()
+	o.Using("default")
+	var form UserSiginForm
+	valid := validation.Validation{}
+	json.Unmarshal(u.Ctx.Input.RequestBody, &form)
+	b, err := valid.Valid(form)
+	if err != nil {
+		log.Println("valid error!")
+
+	}
+	if !b {
+		data := map[string]string{}
+		for _, err := range valid.Errors {
+			log.Println(err.Key, err.Message)
+			data[err.Key] = err.Message
+		}
+		u.Data["json"] = &data
+	} else {
+		user := models.User{
+			Username: form.Username,
+			Password: form.Password}
+		id, err := o.Insert(user)
+		if err != nil {
+			log.Println(err)
+			u.Data["json"] = map[string]string{"ok": "false", "err": "err"}
+
+		}
+		var data map[string]string
+		data["id"] = string(id)
+
+		AuthToken.Create(data, 60*60*24*30)
+
+		u.Data["json"] = map[string]string{"ok": "true"}
+	}
+	u.ServeJSON()
+}
+
 //// @Title Get
 //// @Description get all Users
 //// @Success 200 {object} models.User
