@@ -41,4 +41,11 @@ func init() {
 			[]string{"delete"},
 			nil})
 
+	beego.GlobalControllerRouter["wm/controllers:UserController"] = append(beego.GlobalControllerRouter["wm/controllers:UserController"],
+		beego.ControllerComments{
+			"Post",
+			`/`,
+			[]string{"post"},
+			nil})
+
 }

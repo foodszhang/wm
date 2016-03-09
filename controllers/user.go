@@ -24,12 +24,15 @@ type UserController struct {
 func (u *UserController) Post() {
 	o := orm.NewOrm()
 	o.Using("default")
-	var form UserSiginForm
+	query := o.QueryTable("user")
+	var form UserSigninForm
 	valid := validation.Validation{}
 	json.Unmarshal(u.Ctx.Input.RequestBody, &form)
 	b, err := valid.Valid(form)
 	if err != nil {
 		log.Println("valid error!")
+		log.Println(err)
+		u.Data["json"] = map[string]interface{}{"ok": "false", "message": err}
 
 	}
 	if !b {
@@ -40,21 +43,38 @@ func (u *UserController) Post() {
 		}
 		u.Data["json"] = &data
 	} else {
-		user := models.User{
-			Username: form.Username,
-			Password: form.Password}
-		id, err := o.Insert(user)
-		if err != nil {
-			log.Println(err)
-			u.Data["json"] = map[string]string{"ok": "false", "err": "err"}
+		user := models.User{}
+		is_hav_err := query.Filter("username", form.Username).One(&user)
+		if is_hav_err != orm.ErrNoRows {
+			u.Data["json"] = map[string]string{"ok": "false", "message": "username is existed"}
+		} else {
+			user.Username = form.Username
+			user.Password = form.Password
+			profile := models.Profile{Email: form.Email}
+			user.Profile = &profile
+			id, err := o.Insert(&profile)
+			if err != nil {
+				log.Println(err)
+				u.Data["json"] = map[string]string{"ok": "false", "err": "create profile error"}
+				u.ServeJSON()
+				return
 
+			}
+			id, err = o.Insert(&user)
+			if err != nil {
+				log.Println(err)
+				u.Data["json"] = map[string]string{"ok": "false", "err": "create user error"}
+				u.ServeJSON()
+				return
+
+			}
+			log.Println("!!!!!", id)
+			data := map[string]int64{"id": id}
+
+			token := AuthToken.Create(data, 60*60*24*30)
+
+			u.Data["json"] = map[string]string{"ok": "true", "access_token": token}
 		}
-		var data map[string]string
-		data["id"] = string(id)
-
-		AuthToken.Create(data, 60*60*24*30)
-
-		u.Data["json"] = map[string]string{"ok": "true"}
 	}
 	u.ServeJSON()
 }
