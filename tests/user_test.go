@@ -31,16 +31,39 @@ func init() {
 	}
 }
 
-func TestCreateUser(t *testing.T) {
+func TestSignin(t *testing.T) {
 	user := controllers.UserSigninForm{Username: "admin", Password: "admin", Email: "admin@gmail.com"}
 	data, err := json.Marshal(user)
 	if err != nil {
 		t.Error("转化失败!")
 	} else {
-		r, _ := http.NewRequest("POST", "/v1/user", bytes.NewBuffer(data))
+		r, _ := http.NewRequest("POST", "/v1/signin", bytes.NewBuffer(data))
 		w := httptest.NewRecorder()
 		beego.BeeApp.Handlers.ServeHTTP(w, r)
-		beego.Trace("testing", "TestCreateUser", "Code[%d]\n%s", w.Code, w.Body.String())
+		beego.Trace("testing", "TestSignin", "Code[%d]\n%s", w.Code, w.Body.String())
+		fmt.Println(w.Body.String())
+		Convey("Subject: Test Station Endpoint\n", t, func() {
+			Convey("Status Code Should Be 200", func() {
+				So(w.Code, ShouldEqual, 200)
+			})
+			Convey("The Result Should Not Be Empty", func() {
+				So(w.Body.Len(), ShouldBeGreaterThan, 0)
+			})
+		})
+	}
+}
+
+func TestLogin(t *testing.T) {
+	user := controllers.UserSigninForm{Username: "admin", Password: "admin", Email: "admin@gmail.com"}
+	data, err := json.Marshal(user)
+	if err != nil {
+		t.Error("转化失败!")
+	} else {
+		http.NewRequest("POST", "/v1/signin", bytes.NewBuffer(data))
+		r, _ := http.NewRequest("POST", "/v1/login", bytes.NewBuffer(data))
+		w := httptest.NewRecorder()
+		beego.BeeApp.Handlers.ServeHTTP(w, r)
+		beego.Trace("testing", "TestLogin", "Code[%d]\n%s", w.Code, w.Body.String())
 		fmt.Println(w.Body.String())
 		Convey("Subject: Test Station Endpoint\n", t, func() {
 			Convey("Status Code Should Be 200", func() {

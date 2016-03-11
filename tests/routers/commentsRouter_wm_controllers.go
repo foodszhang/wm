@@ -6,6 +6,13 @@ import (
 
 func init() {
 
+	beego.GlobalControllerRouter["wm/controllers:LoginController"] = append(beego.GlobalControllerRouter["wm/controllers:LoginController"],
+		beego.ControllerComments{
+			"Post",
+			`/`,
+			[]string{"post"},
+			nil})
+
 	beego.GlobalControllerRouter["wm/controllers:ObjectController"] = append(beego.GlobalControllerRouter["wm/controllers:ObjectController"],
 		beego.ControllerComments{
 			"Post",
@@ -41,7 +48,7 @@ func init() {
 			[]string{"delete"},
 			nil})
 
-	beego.GlobalControllerRouter["wm/controllers:UserController"] = append(beego.GlobalControllerRouter["wm/controllers:UserController"],
+	beego.GlobalControllerRouter["wm/controllers:SigninController"] = append(beego.GlobalControllerRouter["wm/controllers:SigninController"],
 		beego.ControllerComments{
 			"Post",
 			`/`,
